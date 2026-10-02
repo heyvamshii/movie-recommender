@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* Screening-room palette: deep ink surfaces, warm paper text, one color per method. */
+:root {
+  color-scheme: dark;
+  --bg: #0a0b0e;
+  --surface-1: #131419;
+  --surface-2: #1a1c22;
+  --surface-3: #23262e;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --text-primary: #f3f1ec;
+  --text-secondary: #bdb9b0;
+  --text-muted: #8a867e;
+
+  /* method colors: validated categorical set (dark surface, CVD-checked) */
+  --m-collaborative: #3987e5;
+  --m-hybrid: #d95926;
+  --m-content: #199e70;
+  --m-svd: #c98500;
+  --m-popular: #d55181;
+
+  --good: #4fbf7f;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--text-primary);
+  --color-ink-2: var(--text-secondary);
+  --color-ink-3: var(--text-muted);
+  --color-collaborative: var(--m-collaborative);
+  --color-hybrid: var(--m-hybrid);
+  --color-content: var(--m-content);
+  --color-svd: var(--m-svd);
+  --color-popular: var(--m-popular);
+  --color-good: var(--good);
+  --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-display-serif);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* faint film grain for atmosphere */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+:focus-visible {
+  outline: 2px solid var(--m-hybrid);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.scroll-row {
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise-in {
+  animation: rise-in 420ms var(--ease-out-expo) both;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200px 0;
+  }
+  to {
+    background-position: 200px 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+dialog::backdrop {
+  background: rgb(5 6 8 / 0.86);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
