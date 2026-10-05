@@ -49,7 +49,7 @@ What this means:
   MovieLens small (GroupLens) → keep movies with ≥ 10 ratings → hide 20% of each user's ratings
   → TMDB: poster, director, cast, keywords (cached; uses TMDB_READ_TOKEN from .env)
   → item-item similarity · SVD (ALS) · TF-IDF content similarity · popularity
-  → evaluate on the hidden 20% → public/data/*.json (~3.8 MB, ~1 MB gzipped)
+  → evaluate on the hidden 20% → public/data/*.json (~3.8 MB, ~1.4 MB gzipped)
 
 [Vercel, live]  Next.js reads public/data/*.json
   → src/lib/recommend.ts scores every movie in the browser (a line-for-line port of scoring.py)
