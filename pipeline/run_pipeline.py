@@ -34,7 +34,6 @@ from recsys.export import (  # noqa: E402
     movie_records,
     neighbor_rows,
     parity_cases,
-    user_records,
     write_json,
 )
 from recsys.scoring import like_counts, popularity_order, popularity_scores  # noqa: E402
@@ -87,7 +86,7 @@ def main() -> None:
     for method, values in cold_start["precision"].items():
         print(f"    cold start {method:13s} " + " ".join(f"{v:.3f}" for v in values))
 
-    featured = pick_featured_users(train_profiles)
+    typical_users = pick_featured_users(train_profiles)  # real profiles for the parity fixture
     sizes = {
         "movies.json": write_json(
             config.OUT_DIR / "movies.json", {"movies": movie_records(dataset, metadata, likes), "popular": popular}
@@ -96,16 +95,12 @@ def main() -> None:
             config.OUT_DIR / "neighbors.json",
             {"collaborative": neighbor_rows(collab_neighbors), "content": neighbor_rows(content_neighbors)},
         ),
-        "users.json": write_json(
-            config.OUT_DIR / "users.json",
-            {"users": user_records(dataset, train_profiles, test_profiles), "featured": featured},
-        ),
         "metrics.json": write_json(
             config.OUT_DIR / "metrics.json", build_metrics(dataset, metadata, ranking, rmse, cold_start)
         ),
     }
     write_json(
-        config.FIXTURE_FILE, parity_cases(train_profiles, featured, collab_neighbors, content_neighbors, popular, models.popularity)
+        config.FIXTURE_FILE, parity_cases(train_profiles, typical_users, collab_neighbors, content_neighbors, popular, models.popularity)
     )
     for name, size in sizes.items():
         print(f"    public/data/{name}: {size / 1024:.0f} KB")

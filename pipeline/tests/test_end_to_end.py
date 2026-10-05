@@ -16,7 +16,7 @@ from recsys.evaluate import (
     pick_featured_users,
     relevant_items,
 )
-from recsys.export import build_metrics, movie_records, parity_cases, user_records
+from recsys.export import build_metrics, movie_records, parity_cases
 from recsys.scoring import like_counts, popularity_order, popularity_scores
 
 N_USERS, N_MOVIES = 40, 40
@@ -87,8 +87,6 @@ def test_pipeline_end_to_end(movielens_dir, monkeypatch):
     records = movie_records(dataset, metadata, likes)
     assert records[0]["poster"] == "/a.jpg" and records[1]["poster"] is None
     assert records[0]["tags"] == ["explosions"]
-    users = user_records(dataset, train_profiles, test_profiles)
-    assert len(users[0]["ratings"]) == 2 * len(train_profiles[0])
     cases = parity_cases(train_profiles, [0, 1], models.collab_neighbors, models.content_neighbors, models.popular, models.popularity)
     assert {case["name"] for case in cases} >= {"empty profile", "user index 0"}
     metrics = build_metrics(dataset, metadata, ranking, rmse, curve)

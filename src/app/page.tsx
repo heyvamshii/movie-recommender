@@ -1,5 +1,5 @@
-import { BrowseView } from "@/components/BrowseView";
+import { DemoView } from "@/components/DemoView";
 
 export default function Home() {
-  return <BrowseView />;
+  return <DemoView />;
 }

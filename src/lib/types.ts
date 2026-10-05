@@ -20,20 +20,12 @@ export type Movie = {
 /** Similar movies for one movie, most similar first. `support` = people who rated both. */
 export type NeighborList = { ids: number[]; sims: number[]; support: number[] | null };
 
-export type MovieLensUser = {
-  id: number; // MovieLens userId
-  ratings: Map<number, number>; // movie idx -> rating (training data)
-  liked: Map<number, number>; // hidden test ratings >= 4, used to mark "hits"
-};
-
 export type Catalog = {
   movies: Movie[];
   popular: number[]; // movie idx, most liked first
   popularity: number[]; // likes / most likes, 0..1
   collaborative: NeighborList[];
   content: NeighborList[];
-  users: MovieLensUser[];
-  featured: number[]; // user idx
   indexById: Map<number, number>; // movieId -> idx
 };
 
@@ -58,29 +50,9 @@ export type Recommendation = {
 
 export type RecommendationSet = Record<Method, Recommendation[]>;
 
+/** The parts of metrics.json the "Which is best?" page shows. */
 export type Metrics = {
   generatedAt: string;
-  dataset: {
-    users: number;
-    movies: number;
-    ratings: number;
-    trainRatings: number;
-    testRatings: number;
-    density: number;
-    moviesWithPosters: number;
-  };
-  params: {
-    topN: number;
-    likeThreshold: number;
-    neutralRating: number;
-    neighborsK: number;
-    hybridHalfPoint: number;
-    popularityPrior: number;
-    svdFactors: number;
-    minRatingsPerMovie: number;
-    testFraction: number;
-  };
-  ranking: Record<EvalMethod, { precision: number; recall: number; coverage: number }>;
-  rmse: { baseline: number; collaborative: number; svd: number; content: number };
-  coldStart: { steps: number[]; users: number; precision: Record<EvalMethod, number[]> };
+  dataset: { users: number; movies: number; ratings: number; moviesWithPosters: number };
+  ranking: Record<EvalMethod, { precision: number }>;
 };

@@ -5,10 +5,11 @@ import { formatRuntime, reasonText } from "@/lib/explain";
 import { backdropUrl } from "@/lib/poster";
 import type { Recommendation } from "@/lib/types";
 import { useCatalog } from "./CatalogProvider";
-import { Poster, StarRating } from "./ui";
+import { Poster } from "./ui";
 
 export function MovieModal({ idx, rec, onClose }: { idx: number; rec?: Recommendation; onClose: () => void }) {
-  const { catalog, yourRatings, rate } = useCatalog();
+  const { catalog, picks, togglePick } = useCatalog();
+  const loved = picks.has(idx);
   const dialog = useRef<HTMLDialogElement>(null);
   const movie = catalog.movies[idx];
   const why = rec ? reasonText(rec.reason, catalog) : null;
@@ -94,17 +95,16 @@ export function MovieModal({ idx, rec, onClose }: { idx: number; rec?: Recommend
             </dl>
 
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line pt-5">
-              <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-3">Your rating</p>
-                <StarRating
-                  value={yourRatings.get(idx) ?? null}
-                  onChange={(rating) => rate(idx, rating)}
-                  label={`Your rating for ${movie.title}`}
-                />
-              </div>
-              <p className="max-w-xs text-xs text-ink-3">
-                Saved in this browser only. Switch the profile to “You” to see recommendations built from your ratings.
-              </p>
+              <button
+                type="button"
+                onClick={() => togglePick(idx)}
+                aria-pressed={loved}
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition active:scale-[0.97] ${
+                  loved ? "bg-hybrid text-white hover:brightness-110" : "bg-ink text-bg hover:bg-white"
+                }`}
+              >
+                {loved ? "♥ In your picks (click to remove)" : "♥ I love this movie"}
+              </button>
               {movie.tmdb && (
                 <a
                   href={`https://www.themoviedb.org/movie/${movie.tmdb}`}

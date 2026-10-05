@@ -1,13 +1,10 @@
 /**
- * "Your" ratings live only in this browser (localStorage), keyed by MovieLens movieId so
+ * Your picks live only in this browser (localStorage), keyed by MovieLens movieId so
  * they survive a pipeline re-run that reorders movie indexes.
  */
 import type { Catalog, Profile } from "./types";
 
 export const RATINGS_KEY = "reelmatch.ratings.v1";
-export const ACTIVE_PROFILE_KEY = "reelmatch.profile.v1";
-
-export type ActiveProfile = { kind: "you" } | { kind: "user"; user: number };
 
 function safeGet(key: string): string | null {
   try {
@@ -50,25 +47,4 @@ export function loadRatings(catalog: Catalog): Profile {
 export function saveRatings(profile: Profile, catalog: Catalog): void {
   const pairs = [...profile].map(([idx, rating]) => [catalog.movies[idx].id, rating]);
   safeSet(RATINGS_KEY, JSON.stringify(pairs));
-}
-
-export function loadActiveProfile(catalog: Catalog): ActiveProfile | null {
-  const raw = safeGet(ACTIVE_PROFILE_KEY);
-  if (!raw) return null;
-  try {
-    const value: unknown = JSON.parse(raw);
-    if (typeof value !== "object" || value === null) return null;
-    const record = value as Record<string, unknown>;
-    if (record.kind === "you") return { kind: "you" };
-    if (record.kind === "user" && typeof record.user === "number" && catalog.users[record.user]) {
-      return { kind: "user", user: record.user };
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}
-
-export function saveActiveProfile(profile: ActiveProfile): void {
-  safeSet(ACTIVE_PROFILE_KEY, JSON.stringify(profile));
 }

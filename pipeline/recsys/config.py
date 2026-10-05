@@ -28,7 +28,7 @@ NEIGHBORS_K = 30  # similar movies kept per movie in the exported tables
 SIM_DECIMALS = 4  # similarities are rounded so Python and the browser use identical numbers
 CO_RATER_SHRINKAGE = 10  # damp similarities that rest on only a few shared raters
 HYBRID_HALF_POINT = 5  # with this many ratings the hybrid is 50% collaborative (tuned: pipeline/tune.py)
-POPULARITY_PRIOR = 5.0  # how strongly the hybrid leans on popular movies while you are new (tuned)
+POPULARITY_PRIOR = 2.0  # how strongly the hybrid leans on popular movies while you are new (tuned)
 PREDICTION_NEIGHBORS = 30  # neighbors used when predicting a single rating (RMSE)
 
 # chosen on a validation split carved out of the training data (test set untouched)

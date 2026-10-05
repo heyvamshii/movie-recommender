@@ -3,6 +3,10 @@
 The training ratings are split again (80/20) into a smaller train set and a validation set.
 Every setting is scored on validation only. The winners are what config.py uses; the real
 test set is then used once, by run_pipeline.py, for the published numbers.
+
+Hybrid rule: the most accurate settings lean so hard on popular movies that the hybrid barely
+reacts to a user's picks. So among settings within HYBRID_TOLERANCE of the best validation
+score, we take the one that relies least on popularity (smallest prior, then smallest half point).
 """
 
 from __future__ import annotations
@@ -33,6 +37,7 @@ VALIDATION_SEED = 7
 SVD_GRID = [(factors, reg) for factors in (10, 20, 40) for reg in (2.0, 5.0, 8.0, 15.0, 25.0)]
 HYBRID_GRID = [(half, prior) for half in (5, 10, 20) for prior in (0.0, 1.0, 2.0, 3.0, 5.0)]
 COLD_STEPS = (1, 3, 5, 10, 20, 40)
+HYBRID_TOLERANCE = 0.03  # accept up to 3% lower validation score for a more personal hybrid
 
 
 def main() -> None:
@@ -84,8 +89,11 @@ def main() -> None:
         row = [precision(half, prior, n) for n in COLD_STEPS] + [precision(half, prior, None)]
         hybrid_results.append((float(np.mean(row)), half, prior))
         print(f"  {half:<5} {prior:<5}  " + "  ".join(f"{value:.3f}" for value in row) + f"  {np.mean(row):.3f}")
-    best_mean, best_half, best_prior = max(hybrid_results)
-    print(f"  -> best: HYBRID_HALF_POINT={best_half}, POPULARITY_PRIOR={best_prior} (mean {best_mean:.3f})")
+    best_mean = max(hybrid_results)[0]
+    close_enough = [row for row in hybrid_results if row[0] >= best_mean * (1 - HYBRID_TOLERANCE)]
+    chosen_mean, chosen_half, chosen_prior = min(close_enough, key=lambda row: (row[2], row[1]))
+    print(f"  best mean {best_mean:.4f}; within {HYBRID_TOLERANCE:.0%}, least popularity-driven:")
+    print(f"  -> chosen: HYBRID_HALF_POINT={chosen_half}, POPULARITY_PRIOR={chosen_prior} (mean {chosen_mean:.4f})")
     print(
         f"\nconfig.py currently uses SVD_FACTORS={config.SVD_FACTORS}, SVD_REG={config.SVD_REG}, "
         f"HYBRID_HALF_POINT={config.HYBRID_HALF_POINT}, POPULARITY_PRIOR={config.POPULARITY_PRIOR}"

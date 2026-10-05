@@ -79,20 +79,6 @@ def neighbor_rows(neighbors: Neighbors) -> list[list[float | int]]:
     return rows
 
 
-def user_records(dataset: Dataset, train_profiles: list[dict[int, float]], test_profiles: list[dict[int, float]]):
-    records = []
-    for user, profile in enumerate(train_profiles):
-        flat_train = [value for item, rating in profile.items() for value in (item, _rating(rating))]
-        liked = [
-            value
-            for item, rating in sorted(test_profiles[user].items())
-            if rating >= config.LIKE_THRESHOLD
-            for value in (item, _rating(rating))
-        ]
-        records.append({"id": int(dataset.user_ids[user]), "ratings": flat_train, "liked": liked})
-    return records
-
-
 def parity_cases(
     train_profiles: list[dict[int, float]],
     featured: list[int],

@@ -27,7 +27,7 @@ export function reasonText(reason: Reason, catalog: Catalog): ReasonText {
       const from = catalog.movies[reason.from].title;
       return {
         headline: `Because you liked ${from}`,
-        detail: `${reason.support} people rated both, and fans of one tend to like the other`,
+        detail: `${reason.support} people rated both and liked them alike`,
       };
     }
     case "content": {
@@ -51,9 +51,9 @@ export const METHOD_LABEL: Record<Method | "svd", string> = {
 };
 
 export const METHOD_TAGLINE: Record<Method, string> = {
-  collaborative: "People with your taste also liked",
-  content: "Matches what you already like",
-  hybrid: "Both blended, plus popularity while you are new",
+  collaborative: "People who liked your picks also liked…",
+  content: "Movies similar to your picks",
+  hybrid: "Both mixed, plus what is popular",
   popular: "What most people liked",
 };
 

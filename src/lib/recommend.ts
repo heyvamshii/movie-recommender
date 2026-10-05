@@ -3,11 +3,11 @@
  * the parity test (recommend.test.ts) checks both produce exactly the same top-10 lists.
  */
 import { sharedFeatures } from "./explain";
-import type { Catalog, Method, NeighborList, Profile, Reason, Recommendation, RecommendationSet } from "./types";
+import type { Catalog, NeighborList, Profile, Reason, Recommendation, RecommendationSet } from "./types";
 
 export const NEUTRAL_RATING = 3;
 export const HYBRID_HALF_POINT = 5;
-export const POPULARITY_PRIOR = 5;
+export const POPULARITY_PRIOR = 2;
 export const TOP_N = 10;
 
 export type ScoreEntry = { score: number; from: number; slot: number; best: number };
@@ -151,42 +151,4 @@ export function recommendAll(profile: Profile, catalog: Catalog, n = TOP_N): Rec
   }));
 
   return { collaborative, content: contentList, hybrid: hybridList, popular };
-}
-
-/** "Because you liked X": X's nearest neighbors in one table, skipping movies already rated. */
-export function similarTo(
-  movie: number,
-  catalog: Catalog,
-  method: Extract<Method, "collaborative" | "content">,
-  exclude: Set<number>,
-  n = TOP_N,
-): Recommendation[] {
-  const list = catalog[method][movie];
-  const result: Recommendation[] = [];
-  for (let slot = 0; slot < list.ids.length && result.length < n; slot++) {
-    const idx = list.ids[slot];
-    if (exclude.has(idx)) continue;
-    const reason: Reason =
-      method === "collaborative"
-        ? { kind: "collaborative", from: movie, support: list.support?.[slot] ?? 0 }
-        : { kind: "content", from: movie, shared: sharedFeatures(catalog.movies[idx], catalog.movies[movie]) };
-    result.push({ idx, score: list.sims[slot], reason });
-  }
-  return result;
-}
-
-/** The profile's favorite movie: highest rating, then most liked overall. */
-export function favoriteMovie(profile: Profile, catalog: Catalog, skip = new Set<number>()): number | null {
-  let best: number | null = null;
-  for (const [idx, rating] of profile) {
-    if (skip.has(idx) || rating < 4) continue;
-    if (
-      best === null ||
-      rating > profile.get(best)! ||
-      (rating === profile.get(best)! && catalog.movies[idx].likes > catalog.movies[best].likes)
-    ) {
-      best = idx;
-    }
-  }
-  return best;
 }

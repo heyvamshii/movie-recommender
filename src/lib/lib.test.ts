@@ -1,49 +1,35 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { buildCatalog, fetchCatalog, parseNeighbors, parsePairs } from "./catalog";
+import { buildCatalog, fetchCatalog, parseNeighbors } from "./catalog";
 import { formatRuntime, formatYear, reasonText, sharedFeatures } from "./explain";
 import { backdropUrl, genreGradient, posterUrl } from "./poster";
-import {
-  ACTIVE_PROFILE_KEY,
-  RATINGS_KEY,
-  isValidRating,
-  loadActiveProfile,
-  loadRatings,
-  saveActiveProfile,
-  saveRatings,
-} from "./storage";
+import { RATINGS_KEY, isValidRating, loadRatings, saveRatings } from "./storage";
 import { makeMovie, makeTinyCatalog } from "./test-helpers";
 
 const RAW_MOVIES = { movies: [makeMovie({ id: 1, likes: 4 }), makeMovie({ id: 2, likes: 2 })], popular: [0, 1] };
 const RAW_NEIGHBORS = { collaborative: [[1, 0.5, 3], []], content: [[1, 0.25], []] };
-const RAW_USERS = { users: [{ id: 9, ratings: [0, 4, 1, 2.5], liked: [1, 5] }], featured: [0, 99] };
 
 describe("catalog parsing", () => {
-  it("builds a catalog from the three data files", () => {
-    const catalog = buildCatalog(RAW_MOVIES, RAW_NEIGHBORS, RAW_USERS);
+  it("builds a catalog from the two data files", () => {
+    const catalog = buildCatalog(RAW_MOVIES, RAW_NEIGHBORS);
     expect(catalog.popularity).toEqual([1, 0.5]);
     expect(catalog.collaborative[0]).toEqual({ ids: [1], sims: [0.5], support: [3] });
     expect(catalog.content[0]).toEqual({ ids: [1], sims: [0.25], support: null });
-    expect(catalog.users[0].ratings.get(1)).toBe(2.5);
-    expect(catalog.featured).toEqual([0]);
     expect(catalog.indexById.get(2)).toBe(1);
   });
 
   it("rejects malformed files with a clear message", () => {
-    expect(() => buildCatalog({}, RAW_NEIGHBORS, RAW_USERS)).toThrow(/movies.json/);
-    expect(() => buildCatalog(RAW_MOVIES, null, RAW_USERS)).toThrow(/neighbors.json/);
-    expect(() => buildCatalog(RAW_MOVIES, RAW_NEIGHBORS, { users: [] })).toThrow(/users.json/);
-    expect(() => buildCatalog({ movies: [], popular: [] }, RAW_NEIGHBORS, RAW_USERS)).toThrow(/no movies/);
-    expect(() => buildCatalog(RAW_MOVIES, { collaborative: [], content: [] }, RAW_USERS)).toThrow(/do not match/);
+    expect(() => buildCatalog({}, RAW_NEIGHBORS)).toThrow(/movies.json/);
+    expect(() => buildCatalog(RAW_MOVIES, null)).toThrow(/neighbors.json/);
+    expect(() => buildCatalog({ movies: [], popular: [] }, RAW_NEIGHBORS)).toThrow(/no movies/);
+    expect(() => buildCatalog(RAW_MOVIES, { collaborative: [], content: [] })).toThrow(/do not match/);
     expect(() => parseNeighbors([[1, 0.5]], true, 2)).toThrow(/wrong length/);
     expect(() => parseNeighbors([[5, 0.5]], false, 2)).toThrow(/points to movie 5/);
-    expect(() => parsePairs([7, 4], 2)).toThrow(/movie 7/);
   });
 
-  it("fetches all three files and reports HTTP errors", async () => {
+  it("fetches both files and reports HTTP errors", async () => {
     const files: Record<string, unknown> = {
       "/data/movies.json": RAW_MOVIES,
       "/data/neighbors.json": RAW_NEIGHBORS,
-      "/data/users.json": RAW_USERS,
     };
     const ok = (async (path: string) => ({ ok: true, status: 200, json: async () => files[path] })) as unknown as typeof fetch;
     expect((await fetchCatalog(ok)).movies).toHaveLength(2);
@@ -65,7 +51,7 @@ describe("explanations", () => {
   it("reasonText writes a headline and detail for every reason kind", () => {
     expect(reasonText({ kind: "collaborative", from: 0, support: 12 }, catalog)).toEqual({
       headline: "Because you liked Alpha",
-      detail: "12 people rated both, and fans of one tend to like the other",
+      detail: "12 people rated both and liked them alike",
     });
     expect(reasonText({ kind: "content", from: 0, shared: ["Ann", "Sci-Fi"] }, catalog).detail).toBe(
       "Shares: Ann · Sci-Fi",
@@ -134,19 +120,6 @@ describe("storage", () => {
     expect(isValidRating("4")).toBe(false);
   });
 
-  it("remembers the active profile and rejects unknown users", () => {
-    expect(loadActiveProfile(catalog)).toBeNull();
-    saveActiveProfile({ kind: "user", user: 0 });
-    expect(loadActiveProfile(catalog)).toEqual({ kind: "user", user: 0 });
-    saveActiveProfile({ kind: "you" });
-    expect(loadActiveProfile(catalog)).toEqual({ kind: "you" });
-    store[ACTIVE_PROFILE_KEY] = JSON.stringify({ kind: "user", user: 50 });
-    expect(loadActiveProfile(catalog)).toBeNull();
-    store[ACTIVE_PROFILE_KEY] = "null";
-    expect(loadActiveProfile(catalog)).toBeNull();
-    store[ACTIVE_PROFILE_KEY] = "{bad";
-    expect(loadActiveProfile(catalog)).toBeNull();
-  });
 
   it("keeps working when storage is blocked", () => {
     vi.stubGlobal("window", {

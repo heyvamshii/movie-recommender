@@ -2,13 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCatalog } from "./CatalogProvider";
 
 const NAV = [
-  { href: "/", label: "Browse" },
-  { href: "/try", label: "Try it yourself" },
-  { href: "/compare", label: "Compare" },
-  { href: "/results", label: "Results" },
+  { href: "/", label: "Live demo" },
+  { href: "/results", label: "Which is best?" },
 ];
 
 export function Header() {
@@ -24,7 +21,7 @@ export function Header() {
             Recommender lab
           </span>
         </Link>
-        <nav aria-label="Main" className="order-3 -mx-1 flex w-full gap-1 overflow-x-auto md:order-none md:w-auto">
+        <nav aria-label="Main" className="ml-auto flex gap-1">
           {NAV.map((item) => {
             const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
             return (
@@ -41,49 +38,11 @@ export function Header() {
             );
           })}
         </nav>
-        <div className="ml-auto">
-          <ProfileSwitcher />
-        </div>
       </div>
     </header>
   );
 }
 
-function ProfileSwitcher() {
-  const { catalog, active, setActive, yourRatings } = useCatalog();
-  const featured = new Set(catalog.featured);
-  const value = active.kind === "you" ? "you" : String(active.user);
-  return (
-    <label className="flex items-center gap-2 text-sm">
-      <span className="hidden text-ink-3 sm:inline">Viewing as</span>
-      <select
-        value={value}
-        onChange={(event) =>
-          setActive(event.target.value === "you" ? { kind: "you" } : { kind: "user", user: Number(event.target.value) })
-        }
-        className="max-w-[220px] rounded-full border border-line-strong bg-surface-2 px-3 py-1.5 text-ink outline-none transition hover:border-white/30"
-      >
-        <option value="you">You ({yourRatings.size} rated)</option>
-        <optgroup label="Featured MovieLens users">
-          {catalog.featured.map((user) => (
-            <option key={user} value={user}>
-              User {catalog.users[user].id} ({catalog.users[user].ratings.size} rated)
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="All MovieLens users">
-          {catalog.users.map((user, idx) =>
-            featured.has(idx) ? null : (
-              <option key={idx} value={idx}>
-                User {user.id} ({user.ratings.size} rated)
-              </option>
-            ),
-          )}
-        </optgroup>
-      </select>
-    </label>
-  );
-}
 
 export function Footer() {
   return (

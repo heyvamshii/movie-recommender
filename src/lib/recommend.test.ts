@@ -3,16 +3,14 @@ import parity from "./__fixtures__/parity.json";
 import {
   HYBRID_HALF_POINT,
   POPULARITY_PRIOR,
-  favoriteMovie,
   hybridScores,
   hybridWeight,
   neighborScores,
   rankTopN,
   recommendAll,
-  similarTo,
 } from "./recommend";
 import { loadRealCatalog, makeTinyCatalog } from "./test-helpers";
-import type { Method, Profile } from "./types";
+import type { Method } from "./types";
 
 type ParityCase = { name: string; profile: [number, number][]; expected: Record<Method, number[]> };
 
@@ -109,22 +107,3 @@ describe("recommendAll explanations", () => {
   });
 });
 
-describe("row helpers", () => {
-  const catalog = makeTinyCatalog();
-
-  it("similarTo lists a movie's neighbors, skipping excluded ones", () => {
-    expect(similarTo(2, catalog, "collaborative", new Set([3])).map((rec) => rec.idx)).toEqual([0]);
-    expect(similarTo(0, catalog, "content", new Set())[0].reason).toMatchObject({ kind: "content", from: 0 });
-  });
-
-  it("favoriteMovie picks the highest rating, then the most liked", () => {
-    const profile: Profile = new Map([
-      [1, 5],
-      [2, 5],
-      [3, 3],
-    ]);
-    expect(favoriteMovie(profile, catalog)).toBe(2);
-    expect(favoriteMovie(profile, catalog, new Set([2]))).toBe(1);
-    expect(favoriteMovie(new Map([[3, 3.5]]), catalog)).toBeNull();
-  });
-});

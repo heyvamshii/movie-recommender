@@ -11,7 +11,7 @@ const displaySerif = Instrument_Serif({ variable: "--font-display-serif", subset
 export const metadata: Metadata = {
   title: { default: "ReelMatch · Movie Recommender Lab", template: "%s · ReelMatch" },
   description:
-    "Collaborative vs content-based vs hybrid movie recommendations on MovieLens, computed live in your browser and measured with precision@10, RMSE and a cold-start test.",
+    "Click movies you love and watch three recommenders (collaborative, content-based and hybrid) react live, using real MovieLens ratings.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

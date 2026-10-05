@@ -13,7 +13,7 @@ let cached: Catalog | null = null;
 
 /** The real exported catalog, as the browser would load it. */
 export function loadRealCatalog(): Catalog {
-  cached ??= buildCatalog(readJson("movies.json"), readJson("neighbors.json"), readJson("users.json"));
+  cached ??= buildCatalog(readJson("movies.json"), readJson("neighbors.json"));
   return cached;
 }
 
@@ -62,8 +62,6 @@ export function makeTinyCatalog(): Catalog {
     popularity: movies.map((movie) => movie.likes / 8),
     collaborative: neighbors,
     content: neighbors.map(({ ids, sims }) => ({ ids, sims, support: null })),
-    users: [{ id: 7, ratings: new Map([[0, 5]]), liked: new Map([[1, 4.5]]) }],
-    featured: [0],
     indexById: new Map(movies.map((movie, idx) => [movie.id, idx])),
   };
 }
