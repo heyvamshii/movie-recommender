@@ -28,6 +28,12 @@ describe("verdict helpers", () => {
     const fake = withColdStart({ popular: flat, collaborative: rising, content: flat });
     expect(ratingsToBeatPopular(fake, "collaborative")).toBe(metrics.coldStart.steps[2]);
     expect(ratingsToBeatPopular(fake, "content")).toBeNull();
+    const nearlyTied = withColdStart({ popular: flat, hybrid: flat.map((value) => value * 1.005) });
+    expect(ratingsToBeatPopular(nearlyTied, "hybrid")).toBeNull(); // +0.5% is a tie
+  });
+
+  it("on the real data the hybrid ties popularity at 1 rating and wins from 2", () => {
+    expect(ratingsToBeatPopular(metrics, "hybrid")).toBe(2);
   });
 
   it("computes percent change safely", () => {

@@ -14,10 +14,13 @@ export function bestRmse(metrics: Metrics): keyof Metrics["rmse"] {
   return entries.reduce((best, entry) => (entry[1] < best[1] ? entry : best))[0];
 }
 
-/** Fewest known ratings at which `method` beats the popularity baseline (null if never). */
+/** A lead smaller than this (relative) counts as a tie, not a win: it is a handful of hits. */
+export const MIN_RELATIVE_LIFT = 0.01;
+
+/** Fewest known ratings at which `method` clearly beats the popularity baseline (null if never). */
 export function ratingsToBeatPopular(metrics: Metrics, method: EvalMethod): number | null {
   const { steps, precision } = metrics.coldStart;
-  const index = steps.findIndex((_, i) => precision[method][i] > precision.popular[i]);
+  const index = steps.findIndex((_, i) => precision[method][i] > precision.popular[i] * (1 + MIN_RELATIVE_LIFT));
   return index === -1 ? null : steps[index];
 }
 

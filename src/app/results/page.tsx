@@ -66,7 +66,7 @@ export default function ResultsPage() {
       label: "Cold start",
       value: collabBeatsAt ? `${collabBeatsAt} ratings` : "never",
       detail: `Collaborative filtering needs that many ratings to beat plain popularity. The hybrid ${
-        hybridBeatsAt ? `beats it from ${hybridBeatsAt}` : "stays level with it"
+        hybridBeatsAt ? `ties it at first and beats it from ${hybridBeatsAt}` : "stays level with it"
       }.`,
     },
     {
