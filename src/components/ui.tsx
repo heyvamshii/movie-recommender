@@ -9,6 +9,7 @@ const METHOD_DOT: Record<Method, string> = {
   content: "bg-content",
   hybrid: "bg-hybrid",
   popular: "bg-popular",
+  userbased: "bg-userbased",
 };
 
 export function MethodDot({ method }: { method: Method }) {

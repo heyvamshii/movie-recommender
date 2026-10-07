@@ -1,6 +1,6 @@
 /** Helpers for the live demo: what changed after a click, and how to say it in one line. */
 import { reasonText } from "./explain";
-import type { Catalog, Recommendation, RecommendationSet } from "./types";
+import type { BaseRecommendationSet, Catalog, Recommendation } from "./types";
 
 export type Change = { kind: "new" } | { kind: "up"; by: number } | { kind: "down"; by: number } | { kind: "same" };
 
@@ -56,7 +56,7 @@ export function hybridMix(recs: Recommendation[]): Mix {
 export type Story = { collaborative: string; content: string; hybrid: string };
 
 /** One plain sentence per method about the movie just picked. */
-export function pickStory(pick: number, lists: RecommendationSet, catalog: Catalog): Story {
+export function pickStory(pick: number, lists: BaseRecommendationSet, catalog: Catalog): Story {
   const title = catalog.movies[pick].title;
   const fromPick = (recs: Recommendation[]) =>
     recs.find((rec) => (rec.reason.kind === "collaborative" || rec.reason.kind === "content") && rec.reason.from === pick);
@@ -73,4 +73,45 @@ export function pickStory(pick: number, lists: RecommendationSet, catalog: Catal
       : `No close look-alikes for ${title} made the top 10.`,
     hybrid: `Now ${Math.round(mix.personal * 100)}% based on your picks, ${Math.round(mix.popular * 100)}% on what is popular.`,
   };
+}
+
+export type FeedLike = {
+  recs: { movieId: number; supporters: number; appUsers: { name: string; shared: number[] }[] }[];
+  matched: number;
+  appMatches: { name: string; shared: number[] }[];
+};
+
+/** Server feed (movieIds) -> recommendations the columns can show. */
+export function feedRecommendations(feed: FeedLike, catalog: Catalog): Recommendation[] {
+  const toIdx = (ids: number[]) => ids.flatMap((id) => catalog.indexById.get(id) ?? []);
+  return feed.recs.flatMap((rec) => {
+    const idx = catalog.indexById.get(rec.movieId);
+    if (idx === undefined) return [];
+    const friend = rec.appUsers[0];
+    return [
+      {
+        idx,
+        score: rec.supporters,
+        reason: {
+          kind: "userbased" as const,
+          supporters: rec.supporters,
+          friend: friend ? { name: friend.name, shared: toIdx(friend.shared) } : null,
+        },
+      },
+    ];
+  });
+}
+
+/** "Matched with 41 people who share your likes, including user3 (2 shared likes: The Avengers, Iron Man)." */
+export function peopleStory(feed: FeedLike, catalog: Catalog): string {
+  if (feed.matched === 0) return "Nobody shares your likes yet. Like a few more movies.";
+  const people = `Matched with ${feed.matched} ${feed.matched === 1 ? "person who shares" : "people who share"} your likes`;
+  const friend = feed.appMatches[0];
+  if (!friend) return `${people}.`;
+  const titles = friend.shared.flatMap((id) => {
+    const idx = catalog.indexById.get(id);
+    return idx === undefined ? [] : [catalog.movies[idx].title];
+  });
+  const count = `${friend.shared.length} shared like${friend.shared.length === 1 ? "" : "s"}`;
+  return `${people}, including ${friend.name} (${count}: ${titles.slice(0, 2).join(", ")}).`;
 }

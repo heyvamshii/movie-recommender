@@ -11,6 +11,7 @@ RAW_DIR = PROJECT_ROOT / "data" / "raw"
 TMDB_CACHE_FILE = RAW_DIR / "tmdb_cache.json"
 OUT_DIR = PROJECT_ROOT / "public" / "data"
 FIXTURE_FILE = PROJECT_ROOT / "src" / "lib" / "__fixtures__" / "parity.json"
+SERVER_DATA_FILE = PROJECT_ROOT / "src" / "server" / "movielens-likes.json"  # bundled server-side only
 ENV_FILE = PROJECT_ROOT / ".env"
 
 MOVIELENS_URL = "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
@@ -29,6 +30,7 @@ SIM_DECIMALS = 4  # similarities are rounded so Python and the browser use ident
 CO_RATER_SHRINKAGE = 10  # damp similarities that rest on only a few shared raters
 HYBRID_HALF_POINT = 5  # with this many ratings the hybrid is 50% collaborative (tuned: pipeline/tune.py)
 POPULARITY_PRIOR = 2.0  # how strongly the hybrid leans on popular movies while you are new (tuned)
+USER_NEIGHBORS = 40  # similar people used by user-based filtering
 PREDICTION_NEIGHBORS = 30  # neighbors used when predicting a single rating (RMSE)
 
 # chosen on a validation split carved out of the training data (test set untouched)

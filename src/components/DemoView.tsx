@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { listChanges, pickerMovies, pickStory, hybridMix, type Change } from "@/lib/demo";
+import { feedRecommendations, hybridMix, listChanges, peopleStory, pickerMovies, pickStory, type Change } from "@/lib/demo";
 import { METHOD_LABEL, METHOD_TAGLINE, reasonText } from "@/lib/explain";
 import { recommendAll } from "@/lib/recommend";
 import type { Method, Recommendation, RecommendationSet } from "@/lib/types";
@@ -9,18 +9,21 @@ import { useCatalog } from "./CatalogProvider";
 import { MethodDot, Poster } from "./ui";
 
 const PICKER_SIZE = 30;
-const COLUMNS: Method[] = ["collaborative", "content", "hybrid"];
+const COLUMNS: Method[] = ["userbased", "hybrid", "collaborative", "content"];
 
 type LastAction = { kind: "added" | "removed"; idx: number } | { kind: "cleared" } | null;
 
 export function DemoView() {
-  const { catalog, picks, togglePick, removeLastPick, clearPicks, openMovie } = useCatalog();
+  const { catalog, user, picks, feed, saving, error, togglePick, removeLastPick, clearPicks, openMovie } = useCatalog();
   const [previous, setPrevious] = useState<RecommendationSet | null>(null);
   const [lastAction, setLastAction] = useState<LastAction>(null);
   const [query, setQuery] = useState("");
   const search = useDeferredValue(query.trim().toLowerCase());
 
-  const lists = useMemo(() => recommendAll(picks, catalog), [picks, catalog]);
+  const lists = useMemo<RecommendationSet>(
+    () => ({ ...recommendAll(picks, catalog), userbased: feedRecommendations(feed, catalog) }),
+    [picks, catalog, feed],
+  );
 
   const picker = useMemo(() => {
     if (!search) return pickerMovies(catalog, PICKER_SIZE);
@@ -54,18 +57,26 @@ export function DemoView() {
     <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-8">
       <header className="mb-4 max-w-4xl">
         <h1 className="font-display text-3xl leading-tight sm:text-4xl">
-          Click a movie you love. <span className="text-ink-3">Watch three recommenders react.</span>
+          Hi {user.displayName}. <span className="text-ink-3">Like movies, and your feed learns.</span>
         </h1>
         <p className="mt-1.5 text-sm text-ink-2">
-          Three different ways of recommending, side by side. Every click updates all three, and{" "}
-          <span className="rounded bg-good/15 px-1.5 font-semibold text-good">NEW</span> marks what just changed.
+          Your likes are saved to your account. Four ways of recommending, side by side, and{" "}
+          <span className="rounded bg-good/15 px-1.5 font-semibold text-good">NEW</span> marks what just changed.{" "}
+          <span aria-live="polite" className="text-ink-3">
+            {saving ? "Saving…" : picks.size > 0 ? `${picks.size} liked` : ""}
+          </span>
         </p>
+        {error && (
+          <p role="alert" className="mt-2 rounded-lg bg-popular/15 px-3 py-2 text-sm text-ink">
+            {error}
+          </p>
+        )}
       </header>
 
       {/* step 1: pick movies */}
       <section aria-label="Pick movies you love" className="mb-4 rounded-2xl border border-line bg-surface-1 p-3 sm:p-4">
         <div className="mb-3 flex flex-wrap items-center gap-3">
-          <h2 className="font-semibold">Pick movies you love</h2>
+          <h2 className="font-semibold">Like movies</h2>
           <input
             type="search"
             value={query}
@@ -130,10 +141,10 @@ export function DemoView() {
         </ul>
       </section>
 
-      <WhatHappened lastAction={lastAction} lists={lists} pickCount={picks.size} />
+      <WhatHappened lastAction={lastAction} lists={lists} pickCount={picks.size} people={peopleStory(feed, catalog)} />
 
       {/* the three recommenders */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {COLUMNS.map((method) => (
           <DemoColumn
             key={method}
@@ -148,25 +159,35 @@ export function DemoView() {
   );
 }
 
-function WhatHappened({ lastAction, lists, pickCount }: { lastAction: LastAction; lists: RecommendationSet; pickCount: number }) {
+function WhatHappened({
+  lastAction,
+  lists,
+  pickCount,
+  people,
+}: {
+  lastAction: LastAction;
+  lists: RecommendationSet;
+  pickCount: number;
+  people: string;
+}) {
   const { catalog } = useCatalog();
   let content: React.ReactNode;
   if (pickCount === 0) {
     content = (
       <p>
-        <strong className="text-ink">No picks yet.</strong> With nothing to go on, all three can only show what is
-        popular, so the columns are the same. Click any movie above.
+        <strong className="text-ink">No likes yet.</strong> With nothing to go on, the recommenders can only show what is
+        popular, and nobody can be matched with you. Click any movie above.
       </p>
     );
   } else if (lastAction?.kind === "added") {
-    const story = pickStory(lastAction.idx, lists, catalog);
+    const story = { ...pickStory(lastAction.idx, lists, catalog), userbased: people };
     content = (
       <>
         <p className="mb-2">
-          You picked <strong className="text-ink">{catalog.movies[lastAction.idx].title}</strong>. Here is what each
-          method did with it:
+          You liked <strong className="text-ink">{catalog.movies[lastAction.idx].title}</strong>. Here is what each method
+          did with it:
         </p>
-        <ul className="grid gap-1.5 md:grid-cols-3 md:gap-4">
+        <ul className="grid gap-1.5 md:grid-cols-2 md:gap-x-4 xl:grid-cols-4">
           {COLUMNS.map((method) => (
             <li key={method} className="flex gap-2">
               <span className="mt-1">
@@ -181,14 +202,15 @@ function WhatHappened({ lastAction, lists, pickCount }: { lastAction: LastAction
   } else if (lastAction?.kind === "removed") {
     content = (
       <p>
-        Removed <strong className="text-ink">{catalog.movies[lastAction.idx].title}</strong>. All three columns updated
-        without it.
+        Removed <strong className="text-ink">{catalog.movies[lastAction.idx].title}</strong>. All columns updated without
+        it. {people}
       </p>
     );
   } else {
     content = (
       <p>
-        You have {pickCount} pick{pickCount === 1 ? "" : "s"}. Add another movie and watch the columns change.
+        You have {pickCount} liked movie{pickCount === 1 ? "" : "s"}. {people} Like another movie and watch the columns
+        change.
       </p>
     );
   }
@@ -266,6 +288,9 @@ function DemoColumn({
           </div>
         )}
       </header>
+      {method === "userbased" && recs.length === 0 && (
+        <p className="px-4 py-6 text-sm text-ink-3">Like a movie and we will find people whose taste overlaps with yours.</p>
+      )}
       <ol className="flex flex-col p-2">
         {recs.map((rec, rank) => {
           const movie = catalog.movies[rec.idx];

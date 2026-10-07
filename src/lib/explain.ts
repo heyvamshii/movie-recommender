@@ -39,6 +39,13 @@ export function reasonText(reason: Reason, catalog: Catalog): ReasonText {
     }
     case "popular":
       return { headline: "Popular pick", detail: `Liked by ${reason.likes} MovieLens users` };
+    case "userbased": {
+      const detail = `${reason.supporters} of the people most like you liked it`;
+      if (!reason.friend) return { headline: `Liked by ${reason.supporters} people with your taste`, detail };
+      const shared = reason.friend.shared.map((idx) => catalog.movies[idx].title);
+      const also = shared.length > 0 ? `, who also likes ${shared[0]}` : "";
+      return { headline: `Liked by ${reason.friend.name}${also}`, detail };
+    }
   }
 }
 
@@ -47,6 +54,7 @@ export const METHOD_LABEL: Record<Method | "svd", string> = {
   content: "Content-based",
   hybrid: "Hybrid",
   popular: "Popular",
+  userbased: "People like you",
   svd: "SVD (matrix factorization)",
 };
 
@@ -55,6 +63,7 @@ export const METHOD_TAGLINE: Record<Method, string> = {
   content: "Movies similar to your picks",
   hybrid: "Both mixed, plus what is popular",
   popular: "What most people liked",
+  userbased: "Users whose likes overlap with yours also liked…",
 };
 
 export function formatYear(movie: Movie): string {

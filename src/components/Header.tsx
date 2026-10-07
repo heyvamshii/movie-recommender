@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logout } from "@/app/actions";
 
 const NAV = [
-  { href: "/", label: "Live demo" },
+  { href: "/", label: "My feed" },
   { href: "/results", label: "Which is best?" },
 ];
 
-export function Header() {
+export function Header({ userName }: { userName: string | null }) {
   const pathname = usePathname();
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-xl">
@@ -38,6 +39,26 @@ export function Header() {
             );
           })}
         </nav>
+        {userName ? (
+          <form action={logout} className="flex items-center gap-2 text-sm">
+            <span className="hidden text-ink-3 sm:inline">
+              Signed in as <span className="font-medium text-ink">{userName}</span>
+            </span>
+            <button
+              type="submit"
+              className="rounded-full border border-line-strong px-3 py-1.5 text-ink-2 transition hover:border-white/30 hover:text-ink"
+            >
+              Sign out
+            </button>
+          </form>
+        ) : (
+          <Link
+            href="/login"
+            className="rounded-full bg-ink px-3 py-1.5 text-sm font-semibold text-bg transition hover:bg-white"
+          >
+            Sign in
+          </Link>
+        )}
       </div>
     </header>
   );

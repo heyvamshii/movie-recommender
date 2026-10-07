@@ -8,15 +8,22 @@ export const metadata: Metadata = { title: "Which is best?" };
 
 const metrics = metricsJson as Metrics;
 const fmt = new Intl.NumberFormat("en-US");
-const SHOWN: Method[] = ["hybrid", "collaborative", "popular", "content"];
+const SHOWN: Method[] = ["userbased", "hybrid", "collaborative", "popular", "content"];
 const BAR_COLOR: Record<Method, string> = {
   collaborative: "bg-collaborative",
   content: "bg-content",
   hybrid: "bg-hybrid",
   popular: "bg-popular",
+  userbased: "bg-userbased",
 };
 
 const HOW_IT_WORKS: { method: Method; idea: string; good: string; bad: string }[] = [
+  {
+    method: "userbased",
+    idea: "Finds the people whose likes overlap most with yours (other users of this site and 610 MovieLens users) and suggests what they liked.",
+    good: "Most accurate here, and other users' likes shape your feed.",
+    bad: "Needs at least one like, and works best with many users.",
+  },
   {
     method: "collaborative",
     idea: "Finds people who loved the same movies as you, and suggests what else they loved.",
@@ -71,16 +78,16 @@ export default function ResultsPage() {
           ))}
         </ul>
         <p className="mt-6 text-sm text-ink-3">
-          <strong className="text-ink-2">Hybrid and collaborative are almost tied overall.</strong> The difference is
-          for new users: the hybrid is already good after a few picks, while collaborative needs dozens of ratings
-          before it even beats “Popular” (the same list for everyone). Why not 10 out of 10? People only rate a small
-          share of all movies, so a suggestion counts only if they happened to rate it.
+          <strong className="text-ink-2">“People like you” guesses best</strong>: matching you with similar people
+          beats matching movies with similar movies. Hybrid and collaborative are almost tied; the hybrid is already
+          good after a few likes. Why not 10 out of 10? People only rate a small share of all movies, so a suggestion
+          counts only if they happened to rate it. “Popular” is the same list for everyone, the bar to beat.
         </p>
       </section>
 
       <section className="mt-10">
         <h2 className="font-display text-3xl">How each one works</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
           {HOW_IT_WORKS.map((item) => (
             <article key={item.method} className="rounded-2xl border border-line bg-surface-1 p-5">
               <h3 className="flex items-center gap-2 text-lg font-semibold">

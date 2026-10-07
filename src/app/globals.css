@@ -19,6 +19,7 @@
   --m-content: #199e70;
   --m-svd: #c98500;
   --m-popular: #d55181;
+  --m-userbased: #c98500;
 
   --good: #4fbf7f;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -39,6 +40,7 @@
   --color-content: var(--m-content);
   --color-svd: var(--m-svd);
   --color-popular: var(--m-popular);
+  --color-userbased: var(--m-userbased);
   --color-good: var(--good);
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-display-serif);

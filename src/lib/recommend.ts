@@ -3,7 +3,7 @@
  * the parity test (recommend.test.ts) checks both produce exactly the same top-10 lists.
  */
 import { sharedFeatures } from "./explain";
-import type { Catalog, NeighborList, Profile, Reason, Recommendation, RecommendationSet } from "./types";
+import type { Catalog, NeighborList, Profile, Reason, Recommendation, BaseRecommendationSet } from "./types";
 
 export const NEUTRAL_RATING = 3;
 export const HYBRID_HALF_POINT = 5;
@@ -112,7 +112,7 @@ function contentReason(catalog: Catalog, idx: number, entry: ScoreEntry | undefi
   return { kind: "content", from: entry.from, shared: sharedFeatures(catalog.movies[idx], catalog.movies[entry.from]) };
 }
 
-export function recommendAll(profile: Profile, catalog: Catalog, n = TOP_N): RecommendationSet {
+export function recommendAll(profile: Profile, catalog: Catalog, n = TOP_N): BaseRecommendationSet {
   const exclude = new Set(profile.keys());
   const collab = neighborScores(profile, catalog.collaborative);
   const content = neighborScores(profile, catalog.content);

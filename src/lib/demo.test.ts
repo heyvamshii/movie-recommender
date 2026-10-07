@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hybridMix, listChanges, pickStory, pickerMovies } from "./demo";
+import { feedRecommendations, hybridMix, listChanges, peopleStory, pickStory, pickerMovies } from "./demo";
 import { recommendAll } from "./recommend";
 import { loadRealCatalog, makeTinyCatalog } from "./test-helpers";
 import type { Recommendation } from "./types";
@@ -64,5 +64,32 @@ describe("pickStory", () => {
     const story = pickStory(3, lists, catalog);
     expect(story.collaborative).toContain("no strong fan overlap");
     expect(story.content).toContain("No close look-alikes");
+  });
+});
+
+describe("feed helpers", () => {
+  const catalog = makeTinyCatalog(); // movieIds 10, 20, 30, 40
+  const feed = {
+    recs: [
+      { movieId: 30, supporters: 3, appUsers: [{ name: "user3", shared: [10] }] },
+      { movieId: 999, supporters: 1, appUsers: [] },
+      { movieId: 40, supporters: 2, appUsers: [] },
+    ],
+    matched: 5,
+    appMatches: [{ name: "user3", shared: [10, 20] }],
+  };
+
+  it("turns the server feed into column rows, skipping unknown movies", () => {
+    const recs = feedRecommendations(feed, catalog);
+    expect(recs.map((rec) => rec.idx)).toEqual([2, 3]);
+    expect(recs[0].reason).toEqual({ kind: "userbased", supporters: 3, friend: { name: "user3", shared: [0] } });
+    expect(recs[1].reason).toEqual({ kind: "userbased", supporters: 2, friend: null });
+  });
+
+  it("explains who the user was matched with", () => {
+    expect(peopleStory(feed, catalog)).toBe("Matched with 5 people who share your likes, including user3 (2 shared likes: Alpha, Beta).");
+    expect(peopleStory({ ...feed, appMatches: [] }, catalog)).toBe("Matched with 5 people who share your likes.");
+    expect(peopleStory({ ...feed, matched: 1, appMatches: [] }, catalog)).toBe("Matched with 1 person who shares your likes.");
+    expect(peopleStory({ ...feed, matched: 0 }, catalog)).toContain("Nobody shares");
   });
 });

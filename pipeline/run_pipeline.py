@@ -31,11 +31,13 @@ from recsys.evaluate import (  # noqa: E402
 )
 from recsys.export import (  # noqa: E402
     build_metrics,
+    movielens_likes,
     movie_records,
     neighbor_rows,
     parity_cases,
     write_json,
 )
+from recsys.userbased import evaluate_user_based  # noqa: E402
 from recsys.scoring import like_counts, popularity_order, popularity_scores  # noqa: E402
 from recsys.tmdb import fetch_metadata, load_token  # noqa: E402
 
@@ -72,6 +74,7 @@ def main() -> None:
     test_profiles = user_ratings(dataset.test, dataset.n_users)
     relevant = relevant_items(test_profiles)
     ranking, _ = evaluate_ranking(models, train_profiles, relevant, dataset.n_items)
+    ranking["userbased"] = evaluate_user_based(train_profiles, relevant, popular, dataset.n_items)
     baseline = bias_baseline(dataset.train, dataset.n_users, dataset.n_items)
     rmse = evaluate_rmse(dataset.test, train_profiles, baseline, factor_model, collab_sim, content_sim)
     cold_start = cold_start_curve(models, train_profiles, relevant)
@@ -99,6 +102,10 @@ def main() -> None:
             config.OUT_DIR / "metrics.json", build_metrics(dataset, metadata, ranking, rmse, cold_start)
         ),
     }
+    write_json(
+        config.SERVER_DATA_FILE,
+        {"movieIds": [int(m) for m in dataset.movies["movieId"]], "users": movielens_likes(dataset)},
+    )
     write_json(
         config.FIXTURE_FILE, parity_cases(train_profiles, typical_users, collab_neighbors, content_neighbors, popular, models.popularity)
     )

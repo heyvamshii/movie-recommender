@@ -8,6 +8,7 @@ __pycache__/
 .pytest_cache/
 .coverage
 data/raw/
+data/app-likes.json
 
 # node / next.js
 /node_modules

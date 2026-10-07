@@ -32,13 +32,17 @@ export type Catalog = {
 /** movie idx -> star rating (0.5..5) */
 export type Profile = Map<number, number>;
 
-export type Method = "collaborative" | "content" | "hybrid" | "popular";
+/** Methods computed in the browser from the precomputed tables. */
+export type BaseMethod = "collaborative" | "content" | "hybrid" | "popular";
+/** "userbased" is computed on the server, because it needs every account's likes. */
+export type Method = BaseMethod | "userbased";
 export type EvalMethod = Method | "svd";
 
 export type Reason =
   | { kind: "collaborative"; from: number; support: number }
   | { kind: "content"; from: number; shared: string[] }
-  | { kind: "popular"; likes: number };
+  | { kind: "popular"; likes: number }
+  | { kind: "userbased"; supporters: number; friend: { name: string; shared: number[] } | null };
 
 export type Recommendation = {
   idx: number;
@@ -48,6 +52,7 @@ export type Recommendation = {
   mix?: { collaborative: number; content: number; popular: number };
 };
 
+export type BaseRecommendationSet = Record<BaseMethod, Recommendation[]>;
 export type RecommendationSet = Record<Method, Recommendation[]>;
 
 /** The parts of metrics.json the "Which is best?" page shows. */

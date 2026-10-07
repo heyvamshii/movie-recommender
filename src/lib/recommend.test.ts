@@ -10,16 +10,16 @@ import {
   recommendAll,
 } from "./recommend";
 import { loadRealCatalog, makeTinyCatalog } from "./test-helpers";
-import type { Method } from "./types";
+import type { BaseMethod } from "./types";
 
-type ParityCase = { name: string; profile: [number, number][]; expected: Record<Method, number[]> };
+type ParityCase = { name: string; profile: [number, number][]; expected: Record<BaseMethod, number[]> };
 
 describe("parity with the Python pipeline", () => {
   const catalog = loadRealCatalog();
 
   it.each(parity as ParityCase[])("$name gives the same four top-10 lists", ({ profile, expected }) => {
     const lists = recommendAll(new Map(profile), catalog);
-    for (const method of Object.keys(expected) as Method[]) {
+    for (const method of Object.keys(expected) as BaseMethod[]) {
       expect(lists[method].map((rec) => rec.idx), method).toEqual(expected[method]);
     }
   });

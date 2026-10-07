@@ -79,6 +79,17 @@ def neighbor_rows(neighbors: Neighbors) -> list[list[float | int]]:
     return rows
 
 
+def movielens_likes(dataset: Dataset) -> list[list[int]]:
+    """Every MovieLens user's liked movieIds (all of their ratings), for the server's user-based feed."""
+    ratings = pd.concat([dataset.train, dataset.test])
+    liked = ratings[ratings["rating"] >= config.LIKE_THRESHOLD]
+    movie_ids = dataset.movies["movieId"].to_numpy()
+    by_user: list[list[int]] = [[] for _ in range(dataset.n_users)]
+    for user, item in liked[["user", "item"]].itertuples(index=False):
+        by_user[int(user)].append(int(movie_ids[item]))
+    return [sorted(ids) for ids in by_user]
+
+
 def parity_cases(
     train_profiles: list[dict[int, float]],
     featured: list[int],

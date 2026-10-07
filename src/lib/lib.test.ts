@@ -1,8 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildCatalog, fetchCatalog, parseNeighbors } from "./catalog";
 import { formatRuntime, formatYear, reasonText, sharedFeatures } from "./explain";
 import { backdropUrl, genreGradient, posterUrl } from "./poster";
-import { RATINGS_KEY, isValidRating, loadRatings, saveRatings } from "./storage";
 import { makeMovie, makeTinyCatalog } from "./test-helpers";
 
 const RAW_MOVIES = { movies: [makeMovie({ id: 1, likes: 4 }), makeMovie({ id: 2, likes: 2 })], popular: [0, 1] };
@@ -80,59 +79,18 @@ describe("poster helpers", () => {
   });
 });
 
-describe("storage", () => {
+describe("user-based reason text", () => {
   const catalog = makeTinyCatalog();
-  let store: Record<string, string>;
-
-  beforeEach(() => {
-    store = {};
-    vi.stubGlobal("window", {
-      localStorage: {
-        getItem: (key: string) => store[key] ?? null,
-        setItem: (key: string, value: string) => {
-          store[key] = value;
-        },
-      },
+  it("names the matching user and a shared like, or counts similar people", () => {
+    expect(reasonText({ kind: "userbased", supporters: 4, friend: { name: "user3", shared: [0] } }, catalog)).toEqual({
+      headline: "Liked by user3, who also likes Alpha",
+      detail: "4 of the people most like you liked it",
     });
-  });
-  afterEach(() => vi.unstubAllGlobals());
-
-  it("saves ratings by MovieLens id and loads them back", () => {
-    saveRatings(new Map([[1, 4.5]]), catalog);
-    expect(JSON.parse(store[RATINGS_KEY])).toEqual([[20, 4.5]]);
-    expect(loadRatings(catalog)).toEqual(new Map([[1, 4.5]]));
-  });
-
-  it("skips unknown movies, invalid ratings and corrupted data", () => {
-    store[RATINGS_KEY] = JSON.stringify([[20, 4], [999, 5], [10, 7], [30, 2.25], "x"]);
-    expect(loadRatings(catalog)).toEqual(new Map([[1, 4]]));
-    store[RATINGS_KEY] = "{not json";
-    expect(loadRatings(catalog).size).toBe(0);
-    store[RATINGS_KEY] = '{"a":1}';
-    expect(loadRatings(catalog).size).toBe(0);
-  });
-
-  it("validates ratings", () => {
-    expect(isValidRating(0.5)).toBe(true);
-    expect(isValidRating(5)).toBe(true);
-    expect(isValidRating(0)).toBe(false);
-    expect(isValidRating(3.3)).toBe(false);
-    expect(isValidRating("4")).toBe(false);
-  });
-
-
-  it("keeps working when storage is blocked", () => {
-    vi.stubGlobal("window", {
-      localStorage: {
-        getItem: () => {
-          throw new Error("blocked");
-        },
-        setItem: () => {
-          throw new Error("blocked");
-        },
-      },
-    });
-    expect(loadRatings(catalog).size).toBe(0);
-    expect(() => saveRatings(new Map([[0, 4]]), catalog)).not.toThrow();
+    expect(reasonText({ kind: "userbased", supporters: 4, friend: { name: "user3", shared: [] } }, catalog).headline).toBe(
+      "Liked by user3",
+    );
+    expect(reasonText({ kind: "userbased", supporters: 4, friend: null }, catalog).headline).toBe(
+      "Liked by 4 people with your taste",
+    );
   });
 });
