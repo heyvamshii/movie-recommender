@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { buildFeed, isKnownMovie } from "./feed";
 import { SEED_LIKES } from "./seed";
 import { ConfigError, createToken, readToken, sessionSecret } from "./session";
-import { FileStore, SupabaseStore, getStore } from "./store";
+import { FileStore, SupabaseStore, checkSupabaseUrl, explainSupabaseError, getStore } from "./store";
 import { authenticate, findUser, verifyPassword } from "./users";
 
 const SECRET = "x".repeat(40);
@@ -86,6 +86,22 @@ describe("file store", () => {
     expect(getStore(env({ SUPABASE_URL: "https://x.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "k" }))).toBeInstanceOf(
       SupabaseStore,
     );
+  });
+});
+
+describe("supabase setup hints", () => {
+  it("names the likely mistake without echoing secrets", () => {
+    expect(explainSupabaseError({ code: "PGRST205", message: "Could not find the table 'public.likes'" }, "read").message).toMatch(/schema.sql/);
+    expect(explainSupabaseError({ message: "Invalid API key" }, "read").message).toMatch(/SERVICE_ROLE_KEY/);
+    expect(explainSupabaseError({ code: "42501", message: "permission denied for table likes" }, "read").message).toMatch(/anon/);
+    expect(explainSupabaseError({ message: "TypeError: fetch failed" }, "read").message).toMatch(/SUPABASE_URL/);
+    expect(explainSupabaseError({ message: "boom" }, "read")).not.toBeInstanceOf(ConfigError);
+  });
+
+  it("accepts the project URL and rejects the dashboard link or junk", () => {
+    expect(checkSupabaseUrl("https://abcd.supabase.co/rest/v1/")).toBe("https://abcd.supabase.co");
+    expect(() => checkSupabaseUrl("https://supabase.com/dashboard/project/abcd")).toThrow(/dashboard/);
+    expect(() => checkSupabaseUrl("abcd")).toThrow(ConfigError);
   });
 });
 
